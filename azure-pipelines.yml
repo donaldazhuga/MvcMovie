@@ -21,10 +21,11 @@ steps:
 
 - script: |
     echo "Cleaning obj and bin directories..."
-    rd /s /q $(Build.SourcesDirectory)\MvcMovie\obj
-    rd /s /q $(Build.SourcesDirectory)\MvcMovie\bin
+    if exist "$(Build.SourcesDirectory)\MvcMovie\obj" rd /s /q "$(Build.SourcesDirectory)\MvcMovie\obj"
+    if exist "$(Build.SourcesDirectory)\MvcMovie\bin" rd /s /q "$(Build.SourcesDirectory)\MvcMovie\bin"
   displayName: "Clean Build Directories"
   continueOnError: true
+
 
 - task: NuGetCommand@2
   displayName: 'Restore NuGet Packages'
