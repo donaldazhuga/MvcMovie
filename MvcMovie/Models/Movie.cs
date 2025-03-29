@@ -18,4 +18,5 @@ public class Movie
     public decimal Price { get; set; }
     [RegularExpression(@"^[A-Z]+[a-zA-Z0-9""'\s-]*$"), StringLength(5)]
     public string Rating { get; set; }
+    //test
 }
