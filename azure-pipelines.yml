@@ -1,8 +1,3 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
 - master
 
@@ -15,12 +10,27 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+# Install NuGet Tool
 - task: NuGetToolInstaller@1
 
+# Restore Dependencies
 - task: NuGetCommand@2
   inputs:
     restoreSolution: '$(solution)'
 
+# Debug Restore Outputs
+- script: |
+    echo "Debugging restore outputs..."
+    dir $(Agent.BuildDirectory)
+  displayName: "Debug Restore Outputs"
+
+# Clean Build Directory
+- script: |
+    echo "Cleaning up old build artifacts..."
+    rd /s /q "$(Agent.BuildDirectory)"
+  displayName: "Clean Build Directory"
+
+# Build Solution
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
@@ -28,6 +38,7 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
+# Run Tests
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
