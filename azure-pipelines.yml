@@ -5,42 +5,44 @@ pool:
   name: 'Default'
 
 variables:
-  solution: 'MvcMovie.sln'  # Adjust path if the .sln file is in a subfolder
+  solution: 'MvcMovie.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 steps:
-# Install NuGet Tool
 - task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
 
-# Install .NET Core SDK
 - task: UseDotNet@2
-  displayName: 'Install .NET Core SDK'
+  displayName: 'Install .NET 8 SDK'
   inputs:
-    version: '8.x'  # Use the appropriate .NET SDK version
-    installationPath: 'C:\sdk'
+    packageType: 'sdk'
+    version: '8.x'
 
-# Debug Directory Contents
 - script: |
-    echo "Debugging working directory contents..."
-    dir $(System.DefaultWorkingDirectory)
-  displayName: "Debug Working Directory"
+    echo "Cleaning obj and bin directories..."
+    rd /s /q $(Build.SourcesDirectory)\MvcMovie\obj
+    rd /s /q $(Build.SourcesDirectory)\MvcMovie\bin
+  displayName: "Clean Build Directories"
+  continueOnError: true
 
-# Restore Dependencies
 - task: NuGetCommand@2
+  displayName: 'Restore NuGet Packages'
   inputs:
+    command: 'restore'
     restoreSolution: '$(solution)'
+    feedsToUse: 'select'
 
-# Build Solution
 - task: VSBuild@1
+  displayName: 'Build Solution'
   inputs:
     solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+    msbuildArgs: '/t:Restore;Build /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-# Run Tests
 - task: VSTest@2
+  displayName: 'Run Tests'
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
