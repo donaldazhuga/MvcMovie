@@ -2,7 +2,7 @@ trigger:
 - master
 
 pool:
-  name: 'Default'
+  name: 'AgentDonalda'
 
 variables:
   solution: 'MvcMovie.sln'
