@@ -1,0 +1,32 @@
+trigger:
+- main
+
+resources:
+  pipelines:
+  - pipeline: CI
+    source: 'WebApp-CI'
+    trigger: true
+
+pool:
+  name: Default
+  demands:
+  - agent.os -equals Windows_NT
+
+variables:
+  artifactName: 'webapp'
+
+steps:
+- task: DownloadPipelineArtifact@2
+  displayName: 'Download artifact'
+  inputs:
+    buildType: 'current'
+    artifactName: '$(artifactName)'
+    targetPath: '$(Pipeline.Workspace)'
+
+- task: IISWebAppDeploymentOnMachineGroup@0
+  displayName: 'Deploy to IIS'
+  inputs:
+    WebSiteName: 'Default Web Site'
+    VirtualApplication: 'WebAppDeployment'
+    Package: '$(Pipeline.Workspace)/$(artifactName)/**/*.zip'
+    RemoveAdditionalFilesFlag: true
