@@ -1,0 +1,49 @@
+trigger:
+- master
+
+pool:
+  name: 'AgentDonalda'
+
+variables:
+  solution: 'MvcMovie.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+- script: |
+    echo "Cleaning obj and bin directories..."
+    if exist "$(Build.SourcesDirectory)\MvcMovie\obj" rd /s /q "$(Build.SourcesDirectory)\MvcMovie\obj"
+    if exist "$(Build.SourcesDirectory)\MvcMovie\bin" rd /s /q "$(Build.SourcesDirectory)\MvcMovie\bin"
+  displayName: "Clean Build Directories"
+  continueOnError: true
+
+
+- task: NuGetCommand@2
+  displayName: 'Restore NuGet Packages'
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(solution)'
+    feedsToUse: 'select'
+
+- task: VSBuild@1
+  displayName: 'Build Solution'
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/t:Restore;Build /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: VSTest@2
+  displayName: 'Run Tests'
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
