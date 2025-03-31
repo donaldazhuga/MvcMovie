@@ -1,24 +1,27 @@
 trigger:
-- master
+- master  # Pipeline triggers on changes to the master branch
 
 pool:
-  name: 'AgentDonalda'
+  name: 'AgentDonalda'  # Your custom agent pool name
 
 variables:
-  solution: 'MvcMovie.sln'
+  solution: 'MvcMovie.sln'  # Solution file for your ASP.NET Core project
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 steps:
+# Install NuGet
 - task: NuGetToolInstaller@1
   displayName: 'Install NuGet'
 
+# Install .NET SDK
 - task: UseDotNet@2
   displayName: 'Install .NET 8 SDK'
   inputs:
     packageType: 'sdk'
     version: '8.x'
 
+# Clean build directories (optional but useful)
 - script: |
     echo "Cleaning obj and bin directories..."
     if exist "$(Build.SourcesDirectory)\MvcMovie\obj" rd /s /q "$(Build.SourcesDirectory)\MvcMovie\obj"
@@ -26,7 +29,7 @@ steps:
   displayName: "Clean Build Directories"
   continueOnError: true
 
-
+# Restore NuGet Packages
 - task: NuGetCommand@2
   displayName: 'Restore NuGet Packages'
   inputs:
@@ -34,6 +37,7 @@ steps:
     restoreSolution: '$(solution)'
     feedsToUse: 'select'
 
+# Build the Solution
 - task: VSBuild@1
   displayName: 'Build Solution'
   inputs:
@@ -42,8 +46,17 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
+# Run Tests (if applicable)
 - task: VSTest@2
   displayName: 'Run Tests'
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+# Publish Build Artifacts (key step for creating deployable artifact)
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'  # Path to publish build output
+    artifactName: 'drop'  # Name of the artifact
+    publishLocation: 'Container'
